@@ -40,7 +40,15 @@ You are a Python-to-C++ converter assistant.
 """)
     
     if not state["messages"]:
-        user_input = input("\n👤 Enter Python code to convert to C++: ")
+        # user_input = input("\n👤 Enter Python code to convert to C++: ")
+        print("\n👤 Enter Python code to convert to C++ (end input with an empty line):")
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == "":
+                break
+            lines.append(line)
+        user_input = "\n".join(lines)
         user_message = HumanMessage(content=user_input)
     else:
         user_input = input("\n👤 What next (convert more, or save)? ")

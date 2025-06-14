@@ -74,7 +74,7 @@ def generate_extension_cross_platform(module_name: str = "cpp_module", platform:
     Builds a Python extension file (.pyd on Windows, .so on Linux) from the converted C++ code.
     Uses MSVC `cl` on Windows and Docker on Linux.
     """
-    import os, subprocess, sysconfig
+    import os,sys, subprocess, sysconfig
 
     # Define output directory (must be absolute path for Docker mount)
     docker_build_path = os.path.abspath("D:/Projects/pkg-gen/build")
@@ -92,23 +92,35 @@ def generate_extension_cross_platform(module_name: str = "cpp_module", platform:
 
     if platform.strip().lower() == "windows":
         # Build with MSVC cl
-        include = sysconfig.get_paths()["include"]
-        lib = sysconfig.get_config_var("LIBDIR")
-        ext = sysconfig.get_config_var("EXT_SUFFIX") or ".pyd"
-        output_file = os.path.join(docker_build_path, f"{module_name}{ext}")
+        venv_base = sys.base_prefix  # This will be your .venv path
+        include_py = sysconfig.get_paths()["include"]
+        include_pybind11 = os.path.join(venv_base, "Lib", "site-packages", "pybind11", "include")
+        lib_dir = os.path.join(venv_base, "libs")
 
-        cmd = [
-            "cl",
-            "/LD", cpp_file_path,
-            f"/I{include}",
-            f"/link",
-            f"/OUT:{output_file}",
-            f"/LIBPATH:{lib}",
-            "python310.lib"
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        ext = sysconfig.get_config_var("EXT_SUFFIX") or ".pyd"
+        output_file = f"{module_name}{ext}"
+        vcvars_path = "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Auxiliary/Build/vcvarsall.bat"
+        if not os.path.exists(vcvars_path):
+            raise FileNotFoundError(f"vcvars64.bat not found at: {vcvars_path}")
+
+        build_cmd = (
+            f'"{vcvars_path}" x64 && '  # Set up the environment
+            f'cl /LD '
+            f'/I D:\\Projects\\langGraph\\.venv\\Include '
+            f'/I D:\\Projects\\langGraph\\.venv\\Lib\\site-packages\\pybind11\\include '
+            f'D:\\Projects\\pkg-gen\\build\\{module_name}.cpp '
+            f'/link /LIBPATH:D:\\Projects\\langGraph\\.venv\\libs '
+            f'python310.lib '
+            f'/OUT:D:\\Projects\\pkg-gen\\build\\{module_name}.pyd'
+        )
+
+        print("Running:", build_cmd)
+        result = subprocess.run(build_cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            return f"❌ MSVC build failed:\n{result.stderr}"
+            print("❌ Build failed!")
+            print(result.stderr)
+            return False
+        print(f"✅ Built: {output_file}")       
 
         return f"✅ .pyd file built at: {output_file}"
 
@@ -150,7 +162,7 @@ def generate_extension_cross_platform(module_name: str = "cpp_module", platform:
         cpp_file = os.path.join(docker_build_path, docker_cpp_file)
         if os.path.exists(cpp_file):
             os.remove(cpp_file)
-                       
+
         output_file_path = os.path.join(docker_build_path, docker_so_file)
         if not os.path.exists(output_file_path):
             return f"⚠️ Build completed but .so file not found at expected path: {output_file_path}"
