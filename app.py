@@ -18,13 +18,14 @@ from tools.code_converter import code_convert
 from tools.code_save import save_code
 from tools.make_pybuild import add_pybind
 from tools.make_package import generate_extension_cross_platform
+from tools.code_debuger import run_and_debug_cpp_code
 
 class AgentState(TypedDict):  
     messages : Annotated[Sequence[BaseMessage], add_messages]
 
 
 
-tools = [code_convert,add_pybind,generate_extension_cross_platform, save_code]
+tools = [code_convert,add_pybind,run_and_debug_cpp_code,generate_extension_cross_platform, save_code]
 
 llm_with_tools = common.llm.bind_tools(tools=tools)
 

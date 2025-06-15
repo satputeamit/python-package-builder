@@ -75,7 +75,7 @@ def generate_extension_cross_platform(module_name: str = "cpp_module", platform:
     Uses MSVC `cl` on Windows and Docker on Linux.
     """
     import os,sys, subprocess, sysconfig
-
+    common.logging.info("🧪 [DEBUG] Running generate_extension_cross_platform...")
     # Define output directory (must be absolute path for Docker mount)
     docker_build_path = os.path.abspath("D:/Projects/pkg-gen/build")
     os.makedirs(docker_build_path, exist_ok=True)
