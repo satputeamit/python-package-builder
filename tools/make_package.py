@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+from typing_extensions import TypedDict
 import common
 from langchain_core.tools import tool
 from langchain_core.messages import BaseMessage, ToolMessage, SystemMessage,HumanMessage
@@ -68,13 +69,16 @@ from langchain_core.messages import BaseMessage, ToolMessage, SystemMessage,Huma
 
 #         return f"✅ Extension built successfully and saved to: {final_path}"
 
-@tool
-def generate_extension_cross_platform(module_name: str = "cpp_module", platform: str = "linux") -> str:
+
+
+def _generate_extension_cross_platform(module_name: str = "cpp_module", platform: str = "linux") -> str:
     """
     Builds a Python extension file (.pyd on Windows, .so on Linux) from the converted C++ code.
     Uses MSVC `cl` on Windows and Docker on Linux.
     """
     import os,sys, subprocess, sysconfig
+    # module_name = data["module_name"]
+    # platform = data["platform"]
     common.logging.info("🧪 [DEBUG] Running generate_extension_cross_platform...")
     # Define output directory (must be absolute path for Docker mount)
     docker_build_path = os.path.abspath("D:/Projects/pkg-gen/build")
@@ -168,3 +172,13 @@ def generate_extension_cross_platform(module_name: str = "cpp_module", platform:
             return f"⚠️ Build completed but .so file not found at expected path: {output_file_path}"
 
         return f"✅ .so file built successfully: {output_file_path}"
+
+
+
+@tool
+def generate_extension_cross_platform(module_name: str = "cpp_module", platform: str = "linux") -> str:
+    """
+    Builds a Python extension file (.pyd on Windows, .so on Linux) from the converted C++ code.
+    Uses MSVC `cl` on Windows and Docker on Linux.
+    """
+    return _generate_extension_cross_platform(module_name, platform) 
